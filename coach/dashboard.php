@@ -35,8 +35,8 @@
                     <span class="text-2xl font-bold text-white">Coach<span class="text-orange-500">Pro</span></span>
                 </div>
                 <div class="flex items-center gap-6">
-                    <a href="#" class="text-slate-300 hover:text-white transition-colors">Accueil</a>
-                    <a href="#" class="text-slate-300 hover:text-white transition-colors">Profil</a>
+                    <a href="dashboard.php" class="text-slate-300 hover:text-white transition-colors">Accueil</a>
+                    <a href="profile.php" class="text-slate-300 hover:text-white transition-colors">Profil</a>
                     <a href="../auth/logout.php" class="text-slate-300 hover:text-white transition-colors flex items-center gap-2">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
@@ -56,7 +56,7 @@
                 Bienvenue, <span class="text-orange-500">Coach</span> !
             </h1>
             <p class="text-slate-400 mb-6">Gérez vos séances et vos disponibilités facilement</p>
-            <a href="disponibilites.html" class="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-orange-500 to-orange-600 text-white font-semibold rounded-lg hover:shadow-lg hover:shadow-orange-500/20 transition-all duration-300 hover:scale-105">
+            <a href="disponibilites.php" class="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-orange-500 to-orange-600 text-white font-semibold rounded-lg hover:shadow-lg hover:shadow-orange-500/20 transition-all duration-300 hover:scale-105">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
                 </svg>
