@@ -1,3 +1,74 @@
+<?php
+require_once '../config/conn.php';
+
+$errors = [];
+
+if (isset($_POST['submit'])) {
+
+    $nom = trim($_POST['nom']);
+    $prenom = trim($_POST['prenom']);
+    $email = trim($_POST['email']);
+    $password = $_POST['mot_de_passe'];
+    $role = $_POST['role'];
+
+    if (empty($nom) || empty($prenom) || empty($email) || empty($password)) {
+        $errors[] = "Tous les champs sont obligatoires";
+    }
+
+    if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        $errors[] = "Email invalide";
+    }
+
+    // Verifier email existant
+    $stmt = mysqli_prepare($conn, "SELECT id_user FROM Utilisateur WHERE email = ?");
+    mysqli_stmt_bind_param($stmt, "s", $email);
+    mysqli_stmt_execute($stmt);
+    mysqli_stmt_store_result($stmt);
+
+    if (mysqli_stmt_num_rows($stmt) > 0) {
+        $errors[] = "Cet email est déjà utilisé";
+    }
+    mysqli_stmt_close($stmt);
+
+    if (empty($errors)) {
+
+        // Récupérer id_role
+        $stmt = mysqli_prepare($conn, "SELECT id_role FROM Role WHERE nom_role = ?");
+        mysqli_stmt_bind_param($stmt, "s", $role);
+        mysqli_stmt_execute($stmt);
+        mysqli_stmt_bind_result($stmt, $id_role);
+        mysqli_stmt_fetch($stmt);
+        mysqli_stmt_close($stmt);
+
+        $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
+
+        // Insert utilisateur
+        $stmt = mysqli_prepare($conn, "
+            INSERT INTO Utilisateur (nom, prenom, email, mot_de_passe, id_role)
+            VALUES (?, ?, ?, ?, ?)
+        ");
+        mysqli_stmt_bind_param($stmt, "ssssi", $nom, $prenom, $email, $hashedPassword, $id_role);
+        mysqli_stmt_execute($stmt);
+        $id_user = mysqli_insert_id($conn);
+        mysqli_stmt_close($stmt);
+
+        // Insert profil
+        if ($role === 'sportif') {
+            $stmt = mysqli_prepare($conn, "INSERT INTO sportif (id_user) VALUES (?)");
+        } else {
+            $stmt = mysqli_prepare($conn, "INSERT INTO coach (id_user) VALUES (?)");
+        }
+
+        mysqli_stmt_bind_param($stmt, "i", $id_user);
+        mysqli_stmt_execute($stmt);
+        mysqli_stmt_close($stmt);
+
+        header("Location: login.php");
+        exit;
+    }
+}
+?>
+
 <!DOCTYPE html>
 <html lang="fr">
 <head>
