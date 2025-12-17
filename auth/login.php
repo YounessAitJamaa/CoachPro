@@ -1,3 +1,64 @@
+<?php
+require_once '../config/conn.php';
+session_start();
+
+$errors = [];
+
+if (isset($_POST['submit'])) {
+
+    $email = trim($_POST['email']);
+    $password = $_POST['mot_de_passe'];
+
+    if (empty($email) || empty($password)) {
+        $errors[] = "Tous les champs sont obligatoires";
+    }
+
+    if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        $errors[] = "Email invalide";
+    }
+
+    if (empty($errors)) {
+
+        $stmt = mysqli_prepare($conn, "
+            SELECT id_user, mot_de_passe, id_role
+            FROM Utilisateur
+            WHERE email = ?
+        ");
+
+        mysqli_stmt_bind_param($stmt, "s", $email);
+        mysqli_stmt_execute($stmt);
+        mysqli_stmt_bind_result($stmt, $id_user, $hashedPassword, $id_role);
+
+        if (mysqli_stmt_fetch($stmt)) {
+
+            if (password_verify($password, $hashedPassword)) {
+
+                // Création de la session
+                $_SESSION['user_id'] = $id_user;
+                $_SESSION['role'] = $id_role;
+
+                // Redirection selon le rôle
+                if ($id_role == 1) {
+                    header("Location: ../sportif/dashboard.php");
+                } else {
+                    header("Location: ../coach/dashboard.php");
+                }
+                exit;
+
+            } else {
+                $errors[] = "Mot de passe incorrect";
+            }
+
+        } else {
+            $errors[] = "Email introuvable";
+        }
+
+        mysqli_stmt_close($stmt);
+    }
+}
+?>
+
+
 <!DOCTYPE html>
 <html lang="fr">
 <head>
