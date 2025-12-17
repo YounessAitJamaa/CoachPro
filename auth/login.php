@@ -39,6 +39,7 @@ if (isset($_POST['submit'])) {
 
             if (password_verify($password, $hashedPassword)) {
 
+                session_regenerate_id(true);
                 // Création de la session
                 $_SESSION['user_id'] = $id_user;
                 $_SESSION['role'] = $id_role;
