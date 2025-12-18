@@ -1,3 +1,66 @@
+<?php
+
+    require_once '../config/conn.php';
+
+    session_start();
+
+    if(!isset($_SESSION['user_id'])) {
+        header('Location: ../index.php');
+        exit();
+    }  
+
+    $user_id = $_SESSION['user_id'];
+
+    // getiing the user's first name and last name
+    $stmt = mysqli_prepare($conn, 'SELECT * FROM Utilisateur WHERE id_user = ?');
+    mysqli_stmt_bind_param($stmt, 'i', $user_id);
+    mysqli_stmt_execute($stmt);
+
+    $result = mysqli_stmt_get_result($stmt);
+
+    if($user = mysqli_fetch_assoc($result)) {
+        $prenom = $user['prenom'];
+        $nom = $user['nom'];
+    }
+
+    mysqli_stmt_close($stmt);
+
+    $stmt = mysqli_prepare($conn, 'SELECT * FROM coach WHERE id_user = ?');
+    mysqli_stmt_bind_param($stmt, 'i', $user_id);
+    mysqli_stmt_execute($stmt);
+
+    $result = mysqli_stmt_get_result($stmt);
+
+    if($user = mysqli_fetch_assoc($result)) {
+        $id_coach = $user['id_coach'];
+        $photo = $user['photo'];
+        $biographie = $user['biographie'];
+        $experience = $user['experience'];
+        $niveau = $user['niveau'];
+    }
+
+    mysqli_stmt_close($stmt);
+
+    $disciplines = [];
+
+
+    $stmt = mysqli_prepare($conn, "
+        SELECT d.nom_discipline
+        FROM coach_discipline cd
+        JOIN disciplines d ON d.id_discipline = cd.id_discipline
+        WHERE cd.id_coach = ?
+        ");
+    mysqli_stmt_bind_param($stmt, 'i', $id_coach);
+    mysqli_stmt_execute($stmt);
+    $result = mysqli_stmt_get_result($stmt);
+
+    while($row = mysqli_fetch_assoc($result)) {
+        $disciplines[] = $row['nom_discipline'];
+    }
+    mysqli_stmt_close($stmt);
+?>
+
+
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -14,13 +77,14 @@
     <!-- Updated header card with glassmorphism design -->
     <div class="bg-slate-800/50 backdrop-blur-sm border border-slate-700/50 rounded-xl p-6 flex items-center gap-6 mb-8 hover:border-orange-500/50 transition-all duration-300">
         <img 
-            src="https://mockmind-api.uifaces.co/content/human/80.jpg"
+            src="<?= htmlspecialchars($photo) ?>"
             alt="Photo coach"
+            
             class="w-32 h-32 rounded-full object-cover border-4 border-orange-500 shadow-lg shadow-orange-500/20"
         >
 
         <div>
-            <h1 class="text-3xl font-bold text-white">Coach Ahmed</h1>
+            <h1 class="text-3xl font-bold text-white">Coach <?= htmlspecialchars($prenom) .' '. htmlspecialchars($nom)?></h1>
             <p class="text-slate-400 mt-1">Coach sportif professionnel</p>
 
             <button
@@ -44,9 +108,7 @@
             <h2 class="text-xl font-semibold text-white">À propos</h2>
         </div>
         <p class="text-slate-300 leading-relaxed">
-            Coach passionné avec plus de 5 ans d'expérience dans l'accompagnement
-            sportif personnalisé. Spécialisé en remise en forme, musculation et
-            préparation physique.
+            <?= empty($biographie) ? 'Aucune biographie disponible' : htmlspecialchars($biographie) ?>
         </p>
     </div>
 
@@ -62,7 +124,7 @@
                 </div>
                 <div>
                     <h2 class="text-lg font-semibold text-slate-400 mb-1">Expérience</h2>
-                    <p class="text-orange-500 text-3xl font-bold">5 ans</p>
+                    <p class="text-orange-500 text-3xl font-bold"><?= (!$experience) ? 0 : htmlspecialchars($experience) ?> ans</p>
                 </div>
             </div>
         </div>
@@ -76,7 +138,7 @@
                 </div>
                 <div>
                     <h2 class="text-lg font-semibold text-slate-400 mb-1">Niveau</h2>
-                    <p class="text-white text-xl font-semibold">Professionnel</p>
+                    <p class="text-white text-xl font-semibold"><?= (!$niveau) ? 'Aucun Niveau' : htmlspecialchars($niveau) ?></p>
                 </div>
             </div>
         </div>
@@ -93,19 +155,16 @@
         </div>
 
         <div class="flex flex-wrap gap-3">
-            <span class="px-4 py-2 bg-orange-500/20 text-orange-400 rounded-lg text-sm border border-orange-500/30 hover:bg-orange-500/30 transition-colors">
-                Musculation
-            </span>
-            <span class="px-4 py-2 bg-orange-500/20 text-orange-400 rounded-lg text-sm border border-orange-500/30 hover:bg-orange-500/30 transition-colors">
-                Football
-            </span>
-            <span class="px-4 py-2 bg-orange-500/20 text-orange-400 rounded-lg text-sm border border-orange-500/30 hover:bg-orange-500/30 transition-colors">
-                Cardio
-            </span>
-            <span class="px-4 py-2 bg-orange-500/20 text-orange-400 rounded-lg text-sm border border-orange-500/30 hover:bg-orange-500/30 transition-colors">
-                Préparation physique
-            </span>
-        </div>
+                <?php if (empty($disciplines)): ?>
+                    <p class="text-slate-500 italic">Aucune discipline sélectionnée.</p>
+                <?php else: ?>
+                    <?php foreach ($disciplines as $d): ?>
+                        <span class="px-4 py-2 bg-slate-900/50 text-orange-400 rounded-xl text-sm font-medium border border-slate-700 hover:border-orange-500/50 transition-colors">
+                            <?= htmlspecialchars($d) ?>
+                        </span>
+                    <?php endforeach; ?>
+                <?php endif; ?>
+            </div>
         </div>
 
     </div>
