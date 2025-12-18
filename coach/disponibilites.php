@@ -1,3 +1,49 @@
+<?php
+
+    require_once '../config/conn.php';
+
+    session_start();
+
+    $user_id = $_SESSION['user_id'];
+
+    $stmt = mysqli_prepare($conn, 'SELECT * FROM coach WHERE id_user= ?');
+    mysqli_stmt_bind_param($stmt, 'i', $user_id);
+    mysqli_stmt_execute($stmt);
+    $coach_res = mysqli_stmt_get_result($stmt);
+
+    if($row = mysqli_fetch_assoc($coach_res)) {
+        $id_coach = $row['id_coach'];
+    }
+    mysqli_stmt_close($stmt);
+
+
+    if(isset($_POST['submit'])) {
+
+        $date = $_POST['date'];
+        $heure_debut = $_POST['heure_debut'];
+        $heure_fin = $_POST['heure_fin'];
+
+        $in_stmt = mysqli_prepare($conn, 'INSERT INTO disponibilite (date_disponibilite, heure_debut, heure_fin, id_coach) VALUES (?, ?, ?, ?)');
+        mysqli_stmt_bind_param($in_stmt, 'sssi', $date, $heure_debut, $heure_fin, $id_coach);
+
+        if(mysqli_stmt_execute($in_stmt)) {
+            header('Location: ' . $_SERVER['PHP_SELF'] . '?success=1');
+            exit();
+        }
+        
+        mysqli_stmt_close($in_stmt);
+
+    }
+
+    $dis_stmt = mysqli_prepare($conn, 'SELECT * FROM disponibilite WHERE id_coach = ?');
+    mysqli_stmt_bind_param($dis_stmt, 'i', $id_coach);
+    mysqli_stmt_execute($dis_stmt);
+    $res_dis = mysqli_stmt_get_result($dis_stmt);
+
+?>
+
+
+
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -27,6 +73,15 @@
             </p>
         </div>
 
+        <?php if(isset($_GET['success'])): ?>
+            <div class="mb-6 p-4 bg-green-500/20 border border-green-500/50 text-green-400 rounded-lg flex items-center gap-3">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                </svg>
+                Profil mis à jour avec succès !
+            </div>
+        <?php endif; ?>
+
         <!-- Updated add availability card with glassmorphism effects -->
         <div class="bg-slate-800/50 backdrop-blur-sm border border-slate-700/50 rounded-xl p-6 mb-8">
             <h2 class="text-xl font-semibold mb-6 flex items-center gap-2 text-white">
@@ -36,12 +91,13 @@
                 Ajouter une disponibilité
             </h2>
 
-            <form class="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <form method="POST" action="" class="grid grid-cols-1 md:grid-cols-4 gap-4">
                 <!-- Date -->
                 <div>
                     <label class="block text-sm text-slate-300 mb-2 font-medium">Date</label>
                     <input
                         type="date"
+                        name="date"
                         class="w-full px-4 py-2.5 rounded-lg bg-slate-900/70 border border-slate-700/50 focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none text-white transition-all"
                     >
                 </div>
@@ -51,6 +107,7 @@
                     <label class="block text-sm text-slate-300 mb-2 font-medium">Heure début</label>
                     <input
                         type="time"
+                        name="heure_debut"
                         class="w-full px-4 py-2.5 rounded-lg bg-slate-900/70 border border-slate-700/50 focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none text-white transition-all"
                     >
                 </div>
@@ -60,6 +117,7 @@
                     <label class="block text-sm text-slate-300 mb-2 font-medium">Heure fin</label>
                     <input
                         type="time"
+                        name="heure_fin"
                         class="w-full px-4 py-2.5 rounded-lg bg-slate-900/70 border border-slate-700/50 focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none text-white transition-all"
                     >
                 </div>
@@ -67,7 +125,8 @@
                 <!-- Button -->
                 <div class="flex items-end">
                     <button
-                        type="button"
+                        type="submit"
+                        name="submit"
                         class="w-full bg-gradient-to-r from-orange-500 to-orange-600 hover:shadow-lg hover:shadow-orange-500/20 text-white font-semibold py-2.5 rounded-lg transition-all duration-300 hover:scale-105"
                     >
                         Ajouter
@@ -88,66 +147,27 @@
             <div class="space-y-4">
 
                 <!-- Updated slot cards with better styling and hover effects -->
-                <div class="flex items-center justify-between bg-slate-900/50 border border-slate-700/30 rounded-lg p-5 hover:border-orange-500/50 transition-all duration-300">
-                    <div class="flex items-center gap-4">
-                        <div class="w-12 h-12 bg-orange-500/20 rounded-lg flex items-center justify-center">
-                            <svg class="w-6 h-6 text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-                            </svg>
-                        </div>
-                        <div>
-                            <p class="font-semibold text-white">Lundi 18 Mars 2025</p>
-                            <div class="flex items-center gap-2 text-slate-400 text-sm mt-1">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                 <?php while($row = mysqli_fetch_assoc($res_dis)): ?>
+                    <div class="flex items-center justify-between bg-slate-900/50 border border-slate-700/30 rounded-lg p-5 hover:border-orange-500/50 transition-all duration-300">
+                        <div class="flex items-center gap-4">
+                            <div class="w-12 h-12 bg-orange-500/20 rounded-lg flex items-center justify-center">
+                                <svg class="w-6 h-6 text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
                                 </svg>
-                                <span>10:00 – 12:00</span>
+                            </div>
+                            <div>
+                                <p class="font-semibold text-white"><?= $row['date_disponibilite'] ?></p>
+                                <div class="flex items-center gap-2 text-slate-400 text-sm mt-1">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                    </svg>
+                                    <span><?= $row['heure_debut'] ?> – <?= $row['heure_fin'] ?></span>
+                                </div>
                             </div>
                         </div>
+                        <span class="px-4 py-1.5 bg-orange-500/20 border border-orange-500/30 text-orange-400 font-medium text-sm rounded-full">Disponible</span>
                     </div>
-                    <span class="px-4 py-1.5 bg-orange-500/20 border border-orange-500/30 text-orange-400 font-medium text-sm rounded-full">Disponible</span>
-                </div>
-
-                <div class="flex items-center justify-between bg-slate-900/50 border border-slate-700/30 rounded-lg p-5 hover:border-orange-500/50 transition-all duration-300">
-                    <div class="flex items-center gap-4">
-                        <div class="w-12 h-12 bg-orange-500/20 rounded-lg flex items-center justify-center">
-                            <svg class="w-6 h-6 text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-                            </svg>
-                        </div>
-                        <div>
-                            <p class="font-semibold text-white">Mercredi 20 Mars 2025</p>
-                            <div class="flex items-center gap-2 text-slate-400 text-sm mt-1">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                                </svg>
-                                <span>16:00 – 18:00</span>
-                            </div>
-                        </div>
-                    </div>
-                    <span class="px-4 py-1.5 bg-orange-500/20 border border-orange-500/30 text-orange-400 font-medium text-sm rounded-full">Disponible</span>
-                </div>
-
-                <div class="flex items-center justify-between bg-slate-900/50 border border-slate-700/30 rounded-lg p-5 hover:border-orange-500/50 transition-all duration-300">
-                    <div class="flex items-center gap-4">
-                        <div class="w-12 h-12 bg-orange-500/20 rounded-lg flex items-center justify-center">
-                            <svg class="w-6 h-6 text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-                            </svg>
-                        </div>
-                        <div>
-                            <p class="font-semibold text-white">Vendredi 22 Mars 2025</p>
-                            <div class="flex items-center gap-2 text-slate-400 text-sm mt-1">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                                </svg>
-                                <span>09:00 – 11:00</span>
-                            </div>
-                        </div>
-                    </div>
-                    <span class="px-4 py-1.5 bg-orange-500/20 border border-orange-500/30 text-orange-400 font-medium text-sm rounded-full">Disponible</span>
-                </div>
-
+                <?php endwhile; ?>
             </div>
         </div>
 
