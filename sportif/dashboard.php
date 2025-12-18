@@ -113,7 +113,7 @@
                 <h2 class="text-2xl font-bold text-white">Mes réservations</h2>
             </div>
 
-            <div class="bg-slate-900/50 rounded-lg p-8 text-center">
+            <!-- <div class="bg-slate-900/50 rounded-lg p-8 text-center">
                 <div class="w-16 h-16 bg-slate-800 rounded-full flex items-center justify-center mx-auto mb-4">
                     <svg class="w-8 h-8 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"/>
@@ -126,7 +126,55 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/>
                     </svg>
                 </a>
-            </div>
+            </div> -->
+
+                            <!-- Reservation Card 1 -->
+                <div class="bg-slate-900/60 backdrop-blur-sm border border-slate-700/50 rounded-xl p-5 hover:border-orange-500/50 transition-all duration-300 hover:shadow-lg hover:shadow-orange-500/10">
+                    <div class="flex items-center justify-between gap-4">
+                        <div class="flex items-center gap-4 flex-1">
+                            <div class="w-12 h-12 bg-gradient-to-br from-orange-500 to-orange-600 rounded-lg flex items-center justify-center flex-shrink-0">
+                                <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                                </svg>
+                            </div>
+                            <div>
+                                <p class="text-white font-semibold text-lg">Coach Ahmed</p>
+                                <div class="flex items-center gap-3 mt-1">
+                                    <span class="text-sm text-slate-400 flex items-center gap-1">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                                        </svg>
+                                        20 Sept 2025
+                                    </span>
+                                    <span class="text-sm text-slate-400 flex items-center gap-1">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                        </svg>
+                                        18:00
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="flex items-center gap-3">
+                            <span class="px-4 py-2 text-sm font-medium rounded-lg bg-yellow-500/10 text-yellow-400 border border-yellow-500/20">
+                                En attente
+                            </span>
+                            <a href="modifier_reservation.php" class="px-4 py-2 bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 rounded-lg border border-blue-500/20 hover:border-blue-500/40 transition-all duration-200 flex items-center gap-2 group">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                                </svg>
+                                <span class="text-sm font-medium">Modifier</span>
+                            </a>
+                            <button class="px-4 py-2 bg-red-500/10 hover:bg-red-500/20 text-red-400 rounded-lg border border-red-500/20 hover:border-red-500/40 transition-all duration-200 flex items-center gap-2 group">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                                </svg>
+                                <span class="text-sm font-medium">Annuler</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
         </div>
     </div>
 

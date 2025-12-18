@@ -112,7 +112,7 @@
                     
                     <div class="flex flex-col items-center text-center space-y-4">
                         <div class="relative">
-                            <img src="https://via.placeholder.com/120" alt="Coach Photo" class="rounded-full w-24 h-24 border-4 border-slate-700">
+                            <img src="" alt="Coach Photo" class="rounded-full w-24 h-24 border-4 border-slate-700">
                             <div class="absolute -bottom-1 -right-1 w-6 h-6 bg-green-500 rounded-full border-4 border-slate-800"></div>
                         </div>
                         
