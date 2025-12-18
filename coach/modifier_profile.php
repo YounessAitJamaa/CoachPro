@@ -1,3 +1,85 @@
+<?php
+
+    require_once '../config/conn.php';
+
+    session_start();
+
+    if(!isset($_SESSION['user_id'])) {
+        header('Location: ../index.php');
+        exit();
+    }  
+
+    $user_id = $_SESSION['user_id'];
+
+    // 1. Fetch current coach details
+    $stmt = mysqli_prepare($conn, 'SELECT * FROM coach WHERE id_user= ?');
+    mysqli_stmt_bind_param($stmt, 'i', $user_id);
+    mysqli_stmt_execute($stmt);
+    $coach_res = mysqli_stmt_get_result($stmt);
+
+    if($row = mysqli_fetch_assoc($coach_res)) {
+        $id_coach = $row['id_coach'];
+        $photoUrl = $row['photo'];
+        $biographie = $row['biographie'];
+        $experience = $row['experience'];
+        $niveau = $row['niveau'];
+    }
+    mysqli_stmt_close($stmt);
+
+    // 2. Handle Form Submission
+    if(isset($_POST['submit'])) {
+
+        $photo = $_POST['photo'];
+        $biographie = $_POST['biographie'];
+        $experience = $_POST['experience'];
+        $niveau = $_POST['niveau'];
+        $selected_disciplines = $_POST['disciplines'] ?? [];
+
+        $up_stmt = mysqli_prepare($conn, 'UPDATE coach SET photo = ?, biographie = ?, experience = ?, niveau = ? WHERE id_user = ?');
+        mysqli_stmt_bind_param($up_stmt, 'ssisi', $photo, $biographie, $experience, $niveau, $user_id);
+        mysqli_stmt_execute($up_stmt);
+        mysqli_stmt_close($up_stmt);
+
+        $del_stmt = mysqli_prepare($conn, 'DELETE FROM coach_discipline WHERE id_coach = ?');
+        mysqli_stmt_bind_param($del_stmt, 'i', $id_coach);
+        mysqli_stmt_execute($del_stmt);
+        mysqli_stmt_close($del_stmt);
+
+        
+        $in_stmt = mysqli_prepare($conn, 'INSERT INTO coach_discipline (id_coach, id_discipline) VALUES (?, ?)');
+        foreach($selected_disciplines as $disc) {
+            mysqli_stmt_bind_param($in_stmt, 'ii', $id_coach, $disc);
+            mysqli_stmt_execute($in_stmt);
+        }
+        mysqli_stmt_close($in_stmt);
+
+        header('Location: '. $_SERVER['PHP_SELF'] . '?success=1');
+        exit();
+    }
+
+
+    $all_disc_res = mysqli_query($conn, 'SELECT * FROM disciplines');
+    
+    $current_disc = [];
+    $stmt = mysqli_prepare($conn, 'SELECT id_discipline FROM coach_discipline WHERE id_coach = ?');
+    mysqli_stmt_bind_param($stmt, 'i', $id_coach);
+    mysqli_stmt_execute($stmt);
+    $res_curr = mysqli_stmt_get_result($stmt);
+
+    while($c = mysqli_fetch_assoc($res_curr)) {
+        $current_disc[] = $c['id_discipline'];
+    }
+    mysqli_stmt_close($stmt);
+
+
+
+
+
+
+?>
+
+
+
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -47,8 +129,17 @@
             <p class="text-slate-400">Mettez à jour vos informations personnelles et professionnelles</p>
         </div>
 
+        <?php if(isset($_GET['success'])): ?>
+            <div class="mb-6 p-4 bg-green-500/20 border border-green-500/50 text-green-400 rounded-lg flex items-center gap-3">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                </svg>
+                Profil mis à jour avec succès !
+            </div>
+        <?php endif; ?>
+
         <!-- Updated form container with glassmorphism effects -->
-        <form class="space-y-6 bg-slate-800/50 backdrop-blur-sm border border-slate-700/50 p-8 rounded-xl">
+        <form action="" method="POST" class="space-y-6 bg-slate-800/50 backdrop-blur-sm border border-slate-700/50 p-8 rounded-xl">
 
             <!-- Photo URL -->
             <div>
@@ -61,6 +152,7 @@
                 <input 
                     type="url"
                     name="photo"
+                    value="<?= htmlspecialchars($photoUrl) ?>"
                     placeholder="https://example.com/photo.jpg"
                     class="w-full p-3 bg-slate-900/70 rounded-lg border border-slate-700 text-slate-200 placeholder-slate-500 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition-all outline-none"
                 >
@@ -78,10 +170,11 @@
                     Biographie
                 </label>
                 <textarea 
-                    rows="4" 
+                    rows="4"
+                    name="biographie"
                     placeholder="Parlez-nous de votre parcours et de votre expertise..."
                     class="w-full p-3 bg-slate-900/70 rounded-lg border border-slate-700 text-slate-200 placeholder-slate-500 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition-all outline-none resize-none"
-                ></textarea>
+                ><?= htmlspecialchars($biographie) ?></textarea>
             </div>
 
             <!-- Updated Experience field with icon -->
@@ -95,6 +188,8 @@
                 <input 
                     type="number" 
                     min="0" 
+                    value="<?= htmlspecialchars($experience) ?>"
+                    name="experience"
                     placeholder="Ex: 5"
                     class="w-full p-3 bg-slate-900/70 rounded-lg border border-slate-700 text-slate-200 placeholder-slate-500 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition-all outline-none"
                 >
@@ -108,10 +203,11 @@
                     </svg>
                     Niveau
                 </label>
-                <select class="w-full p-3 bg-slate-900/70 rounded-lg border border-slate-700 text-slate-200 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition-all outline-none">
-                    <option>Débutant</option>
-                    <option>Intermédiaire</option>
-                    <option>Professionnel</option>
+                <select name="niveau" class="w-full p-3 bg-slate-900/70 rounded-lg border border-slate-700 text-slate-200 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition-all outline-none">
+                    <option>selecter un niveau</option>
+                    <option <?= ($niveau === 'Debutant') ? 'selected' : '' ?>>Debutant</option>
+                    <option <?= ($niveau === 'Intermediaire') ? 'selected' : '' ?>>Intermediaire</option>
+                    <option <?= ($niveau === 'Professionnel') ? 'selected' : '' ?>>Professionnel</option>
                 </select>
             </div>
 
@@ -124,28 +220,26 @@
                     Disciplines
                 </label>
                 <div class="flex flex-wrap gap-3">
-                    <label class="flex items-center gap-2 px-4 py-2 bg-slate-900/50 rounded-lg border border-slate-700 hover:border-orange-500 transition-colors cursor-pointer">
-                        <input type="checkbox" class="w-4 h-4 text-orange-500 bg-slate-800 border-slate-600 rounded focus:ring-orange-500 focus:ring-2">
-                        <span class="text-slate-300">Musculation</span>
-                    </label>
-                    <label class="flex items-center gap-2 px-4 py-2 bg-slate-900/50 rounded-lg border border-slate-700 hover:border-orange-500 transition-colors cursor-pointer">
-                        <input type="checkbox" class="w-4 h-4 text-orange-500 bg-slate-800 border-slate-600 rounded focus:ring-orange-500 focus:ring-2">
-                        <span class="text-slate-300">Football</span>
-                    </label>
-                    <label class="flex items-center gap-2 px-4 py-2 bg-slate-900/50 rounded-lg border border-slate-700 hover:border-orange-500 transition-colors cursor-pointer">
-                        <input type="checkbox" class="w-4 h-4 text-orange-500 bg-slate-800 border-slate-600 rounded focus:ring-orange-500 focus:ring-2">
-                        <span class="text-slate-300">Cardio</span>
-                    </label>
-                    <label class="flex items-center gap-2 px-4 py-2 bg-slate-900/50 rounded-lg border border-slate-700 hover:border-orange-500 transition-colors cursor-pointer">
-                        <input type="checkbox" class="w-4 h-4 text-orange-500 bg-slate-800 border-slate-600 rounded focus:ring-orange-500 focus:ring-2">
-                        <span class="text-slate-300">Natation</span>
-                    </label>
+                    <?php while($row = mysqli_fetch_assoc($all_disc_res)): ?>
+                        <?php $isChecked = in_array($row['id_discipline'], $current_disc) ? 'checked' : ''; ?>
+                        <label class="flex items-center gap-2 px-4 py-2 bg-slate-900/50 rounded-lg border border-slate-700 hover:border-orange-500 transition-colors cursor-pointer">
+                            <input 
+                                type="checkbox" 
+                                name="disciplines[]" 
+                                value="<?= $row['id_discipline'] ?>"
+                                <?= $isChecked ?>
+                                class="w-4 h-4 text-orange-500 bg-slate-800 border-slate-600 rounded focus:ring-orange-500 focus:ring-2"
+                            >
+                            <span class="text-slate-300"><?= htmlspecialchars($row['nom_discipline']) ?></span>
+                        </label>
+                    <?php endwhile; ?>
                 </div>
             </div>
 
             <!-- Updated submit button with gradient and modern hover effects -->
             <button
                 type="submit"
+                name="submit"
                 class="w-full bg-gradient-to-r from-orange-500 to-orange-600 py-3 rounded-lg font-semibold text-white hover:shadow-lg hover:shadow-orange-500/20 transition-all duration-300 hover:scale-105 flex items-center justify-center gap-2"
             >
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
