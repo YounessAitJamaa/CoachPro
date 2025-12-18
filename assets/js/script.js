@@ -28,3 +28,14 @@ function showSuccess(message) {
 
     successContainer.classList.remove('hidden');
 }
+
+
+
+
+// Mobile menu toggle
+const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+const mobileMenu = document.getElementById('mobile-menu');
+
+mobileMenuBtn.addEventListener('click', () => {
+    mobileMenu.classList.toggle('hidden');
+});

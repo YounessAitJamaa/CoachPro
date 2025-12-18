@@ -7,33 +7,9 @@
 </head>
 <body class="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 min-h-screen">
 
-    <!-- Added navigation header to match coach.html design -->
-    <nav class="bg-slate-900/50 backdrop-blur-sm border-b border-slate-700/50">
-        <div class="container mx-auto px-6 py-4">
-            <div class="flex items-center justify-between">
-                <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 bg-gradient-to-br from-orange-500 to-orange-600 rounded-lg flex items-center justify-center">
-                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
-                        </svg>
-                    </div>
-                    <span class="text-2xl font-bold text-white">Coach<span class="text-orange-500">Pro</span></span>
-                </div>
-                <div class="flex items-center gap-6">
-                    <a href="dashboard.php" class="text-slate-300 hover:text-white transition-colors">Accueil</a>
-                    <a href="profile.php" class="text-slate-300 hover:text-white transition-colors">Profil</a>
-                    <a href="../auth/logout.php" class="text-slate-300 hover:text-white transition-colors flex items-center gap-2">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
-                        </svg>
-                        Déconnexion
-                    </a>
-                </div>
-            </div>
-        </div>
-    </nav>
+    <?php  include '../includes/header.php' ?>
 
-<div class="max-w-4xl mx-auto p-8">
+    <div class="max-w-4xl mx-auto p-8">
 
     <!-- Updated header card with glassmorphism design -->
     <div class="bg-slate-800/50 backdrop-blur-sm border border-slate-700/50 rounded-xl p-6 flex items-center gap-6 mb-8 hover:border-orange-500/50 transition-all duration-300">
@@ -130,9 +106,9 @@
                 Préparation physique
             </span>
         </div>
-    </div>
+        </div>
 
-</div>
+    </div>
 
 </body>
 </html>

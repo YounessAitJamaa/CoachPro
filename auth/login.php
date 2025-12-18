@@ -40,11 +40,10 @@ if (isset($_POST['submit'])) {
             if (password_verify($password, $hashedPassword)) {
 
                 session_regenerate_id(true);
-                // Création de la session
+                
                 $_SESSION['user_id'] = $id_user;
                 $_SESSION['role'] = $id_role;
 
-                // Redirection selon le rôle
                 if ($id_role == 1) {
                     header("Location: ../sportif/dashboard.php");
                 } else {
