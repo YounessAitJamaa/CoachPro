@@ -2,6 +2,8 @@
 
     require_once '../config/conn.php';
 
+    session_start();
+
     if($_SESSION['role'] == 1) {
         header('Location: ../index.php');
         exit();
@@ -44,7 +46,7 @@
                 <h1 class="text-3xl font-bold text-white">Historique des <span class="text-orange-500">Séances</span></h1>
                 <p class="text-slate-400 mt-1">Consultez et gérez l'ensemble de vos réservations passées et futures.</p>
             </div>
-            <a href="dashboard_coach.php" class="inline-flex items-center gap-2 text-slate-400 hover:text-white transition-colors">
+            <a href="dashboard.php" class="inline-flex items-center gap-2 text-slate-400 hover:text-white transition-colors">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
                 </svg>

@@ -2,7 +2,7 @@
 
     require_once '../config/conn.php';
     require_once '../includes/auth_check.php';
-
+    session_start();
 
     if($_SESSION['role'] == 1) {
         header('Location: ../index.php');

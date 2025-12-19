@@ -1,3 +1,58 @@
+<?php 
+
+    require_once '../config/conn.php';
+    session_start();
+
+    if($_SESSION['role'] != 1) {
+        header('Location: ../index.php');
+        exit();
+    }
+
+    $user_id = $_SESSION['user_id'];
+
+    $sp_stmt = mysqli_prepare($conn, 'SELECT sp.*, u.nom AS client_nom, u.prenom AS client_prenom, u.email AS client_email
+                                        FROM sportif sp
+                                        JOIN Utilisateur u ON sp.id_user = u.id_user
+                                        WHERE sp.id_user = ?');
+    mysqli_stmt_bind_param($sp_stmt, 'i', $user_id);
+    mysqli_stmt_execute($sp_stmt);
+    $result = mysqli_stmt_get_result($sp_stmt);
+
+    if($row = mysqli_fetch_assoc($result)) {
+        $nom = $row['client_nom'];
+        $prenom = $row['client_prenom'];
+        $email = $row['client_email'];
+        $telephone = $row['telephone'] ?? 'Aucun téléphone';
+    }
+    mysqli_stmt_close($sp_stmt);
+
+
+
+    $stmt = mysqli_prepare($conn, '    SELECT COUNT(s.id_seance) AS total 
+                                        FROM seance s
+                                        JOIN sportif sp ON s.id_sportif = sp.id_sportif
+                                        WHERE sp.id_user = ?
+                                    ');
+    mysqli_stmt_bind_param($stmt, 'i', $user_id);
+    mysqli_stmt_execute($stmt);
+    $totalResult = mysqli_stmt_get_result($stmt);
+    $resultTotal = mysqli_fetch_assoc($totalResult)['total'] ?? 0;
+    mysqli_stmt_close($stmt);
+
+    $ter_stmt = mysqli_prepare($conn, ' SELECT COUNT(s.id_seance) AS total 
+                                        FROM seance s
+                                        JOIN sportif sp ON s.id_sportif = sp.id_sportif
+                                        WHERE sp.id_user = ? AND s.date_seance < CURDATE()
+                                    ');
+    mysqli_stmt_bind_param($ter_stmt, 'i', $user_id);
+    mysqli_stmt_execute($ter_stmt);
+    $resFinished = mysqli_stmt_get_result($ter_stmt);
+    $totalFinished = mysqli_fetch_assoc($resFinished)['total'] ?? 0;
+    mysqli_stmt_close($ter_stmt);
+?>
+
+
+
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -34,8 +89,8 @@
             >
 
             <div class="text-center sm:text-left">
-                <h2 class="text-xl sm:text-2xl font-bold text-white mb-1">Youness Aj</h2>
-                <p class="text-slate-400 mb-3 sm:mb-4 text-sm sm:text-base">youness@email.com</p>
+                <h2 class="text-xl sm:text-2xl font-bold text-white mb-1"><?= htmlspecialchars($prenom) .' '. htmlspecialchars($nom) ?></h2>
+                <p class="text-slate-400 mb-3 sm:mb-4 text-sm sm:text-base"><?= htmlspecialchars($email) ?></p>
 
                 <span class="inline-block bg-orange-500/20 text-orange-400 px-4 py-1 rounded-lg text-sm border border-orange-500/30">
                     Sportif
@@ -55,7 +110,7 @@
                 </div>
                 <div>
                     <p class="text-slate-400 text-xs sm:text-sm">Séances réservées</p>
-                    <p class="text-2xl sm:text-3xl font-bold text-white">12</p>
+                    <p class="text-2xl sm:text-3xl font-bold text-white"><?= htmlspecialchars($resultTotal) ?></p>
                 </div>
             </div>
         </div>
@@ -69,7 +124,7 @@
                 </div>
                 <div>
                     <p class="text-slate-400 text-xs sm:text-sm">Séances terminées</p>
-                    <p class="text-2xl sm:text-3xl font-bold text-white">8</p>
+                    <p class="text-2xl sm:text-3xl font-bold text-white"><?= htmlspecialchars($totalFinished) ?></p>
                 </div>
             </div>
         </div>
@@ -101,22 +156,17 @@
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
             <div>
                 <p class="text-slate-400 text-xs sm:text-sm mb-1">Nom complet</p>
-                <p class="font-medium text-white text-sm sm:text-base">Youness Aj</p>
+                <p class="font-medium text-white text-sm sm:text-base"><?= htmlspecialchars($prenom) .' '. htmlspecialchars($nom) ?></p>
             </div>
 
             <div>
                 <p class="text-slate-400 text-xs sm:text-sm mb-1">Email</p>
-                <p class="font-medium text-white text-sm sm:text-base break-all">youness@email.com</p>
+                <p class="font-medium text-white text-sm sm:text-base break-all"><?= htmlspecialchars($email) ?></p>
             </div>
 
             <div>
                 <p class="text-slate-400 text-xs sm:text-sm mb-1">Téléphone</p>
-                <p class="font-medium text-white text-sm sm:text-base">+212 6 12 34 56 78</p>
-            </div>
-
-            <div>
-                <p class="text-slate-400 text-xs sm:text-sm mb-1">Objectif sportif</p>
-                <p class="font-medium text-white text-sm sm:text-base">Perte de poids</p>
+                <p class="font-medium text-white text-sm sm:text-base"><?= htmlspecialchars($telephone) ?></p>
             </div>
         </div>
     </div>
