@@ -22,6 +22,7 @@
         $nom = $row['client_nom'];
         $prenom = $row['client_prenom'];
         $email = $row['client_email'];
+        $photo = $row['photo'];
         $telephone = $row['telephone'] ?? 'Aucun téléphone';
     }
     mysqli_stmt_close($sp_stmt);
@@ -83,7 +84,7 @@
     <div class="bg-slate-800/50 backdrop-blur-sm border border-slate-700/50 rounded-xl p-4 sm:p-6 lg:p-8 mb-6 sm:mb-10 hover:border-orange-500/50 transition-all duration-300">
         <div class="flex flex-col sm:flex-row items-center sm:items-start gap-4 sm:gap-6 lg:gap-8">
             <img
-                src="https://images.unsplash.com/photo-1598970434795-0c54fe7c0642"
+                src="<?= htmlspecialchars($photo) ?>"
                 class="w-24 h-24 sm:w-28 sm:h-28 lg:w-32 lg:h-32 rounded-full object-cover border-4 border-orange-500 shadow-lg shadow-orange-500/20"
                 alt="Sportif"
             >

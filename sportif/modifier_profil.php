@@ -1,3 +1,59 @@
+<?php
+
+
+    require_once '../config/conn.php';
+    session_start();
+
+    if($_SESSION['role'] != 1) {
+        header('Location: ../index.php');
+        exit();
+    }
+
+    $user_id = $_SESSION['user_id'];
+    
+    if(isset($_POST['submit'])) {
+
+        $photo = $_POST['photo'];
+        $nom = $_POST['nom'];
+        $prenom = $_POST['prenom'];
+        $telephone = $_POST['telephone'];
+
+        $user_stmt = mysqli_prepare($conn, 'UPDATE Utilisateur SET nom = ?, prenom = ? WHERE id_user = ?');
+        mysqli_stmt_bind_param($user_stmt, 'ssi', $nom, $prenom, $user_id);
+        mysqli_stmt_execute($user_stmt);
+
+        $sp_stmt = mysqli_prepare($conn, 'UPDATE sportif SET photo = ?, telephone = ? WHERE id_user = ?');
+        mysqli_stmt_bind_param($sp_stmt, 'ssi', $photo, $telephone, $user_id);
+        mysqli_stmt_execute($sp_stmt);
+
+        header('Location: '. $_SERVER['PHP_SELF'] .'?msg=success');
+        exit();
+    }
+
+
+    $stmt = mysqli_prepare($conn, ' SELECT sp.*, u.nom AS client_nom ,u.prenom AS client_prenom ,u.email AS client_email 
+                                    FROM sportif sp 
+                                    JOIN Utilisateur u ON sp.id_user = u.id_user
+                                    WHERE u.id_user = ?');
+    mysqli_stmt_bind_param($stmt, 'i', $user_id);
+    mysqli_stmt_execute($stmt);
+    $selResutl = mysqli_stmt_get_result($stmt);
+
+    while($row = mysqli_fetch_assoc($selResutl)) {
+        $photo = $row['photo'];
+        $nom = $row['client_nom'];
+        $prenom = $row['client_prenom'];
+        $email = $row['client_email'];
+        $telephone = $row['telephone'];
+    }
+
+
+
+?>
+
+
+
+
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -41,8 +97,17 @@
         <h1 class="text-2xl md:text-3xl font-bold text-white">Modifier mon profil</h1>
     </div>
 
+    <?php if(isset($_GET['msg'])): ?>
+        <div class="mb-6 p-4 bg-green-500/20 border border-green-500/50 text-green-400 rounded-lg flex items-center gap-3">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+            </svg>
+            Profil mis à jour avec succès !
+        </div>
+    <?php endif; ?>
+
     <!-- Updated form card with glassmorphism design and responsive layout -->
-    <form class="bg-slate-800/50 backdrop-blur-sm border border-slate-700/50 rounded-xl p-4 md:p-8 space-y-6 hover:border-orange-500/50 transition-all duration-300">
+    <form action="" method="POST" class="bg-slate-800/50 backdrop-blur-sm border border-slate-700/50 rounded-xl p-4 md:p-8 space-y-6 hover:border-orange-500/50 transition-all duration-300">
 
         <!-- Profile Image URL -->
         <div>
@@ -54,7 +119,9 @@
             </label>
             <input
                 type="text"
+                name="photo"
                 placeholder="https://example.com/photo.jpg"
+                value="<?= htmlspecialchars($photo) ?>"
                 class="w-full bg-slate-900/50 border border-slate-700 rounded-lg px-4 py-3 focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none transition-all text-white"
             >
             <p class="text-xs text-slate-500 mt-2 ml-1">
@@ -73,7 +140,8 @@
                 </label>
                 <input
                     type="text"
-                    value="Youness"
+                    name="nom"
+                    value="<?= htmlspecialchars($nom) ?>"
                     class="w-full bg-slate-900/50 border border-slate-700 rounded-lg px-4 py-3 focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none transition-all text-white"
                 >
             </div>
@@ -87,7 +155,8 @@
                 </label>
                 <input
                     type="text"
-                    value="Aj"
+                    name="prenom"
+                    value="<?= htmlspecialchars($prenom) ?>"
                     class="w-full bg-slate-900/50 border border-slate-700 rounded-lg px-4 py-3 focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none transition-all text-white"
                 >
             </div>
@@ -103,7 +172,7 @@
             </label>
             <input
                 type="email"
-                value="youness@email.com"
+                value="<?= htmlspecialchars($email) ?>"
                 disabled
                 class="w-full bg-slate-900/30 border border-slate-700 rounded-lg px-4 py-3 text-slate-400 cursor-not-allowed"
             >
@@ -122,7 +191,9 @@
             </label>
             <input
                 type="text"
+                name="telephone"
                 placeholder="+212 6 12 34 56 78"
+                value="<?= htmlspecialchars($telephone) ?>"
                 class="w-full bg-slate-900/50 border border-slate-700 rounded-lg px-4 py-3 focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none transition-all text-white"
             >
         </div>
@@ -136,6 +207,7 @@
 
             <button
                 type="submit"
+                name="submit"
                 class="w-full sm:w-auto px-6 py-3 rounded-lg bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-400 hover:to-orange-500 text-white font-semibold transition-all duration-300 shadow-lg shadow-orange-500/20 hover:shadow-orange-500/40">
                 Enregistrer
             </button>
