@@ -46,6 +46,8 @@ CREATE TABLE seance (
     statut VARCHAR(25),
     id_sportif INT,
     id_coach INT,
+    id_discipline INT, 
+    FOREIGN KEY (id_discipline) REFERENCES disciplines(id_discipline) ON DELETE CASCADE,
     FOREIGN KEY (id_sportif) REFERENCES sportif(id_sportif) ON DELETE CASCADE,
     FOREIGN KEY (id_coach) REFERENCES coach(id_coach) ON DELETE CASCADE
 );

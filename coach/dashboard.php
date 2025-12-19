@@ -1,4 +1,4 @@
-<?php 
+<?php
 
     require_once '../config/conn.php';
     require_once '../includes/auth_check.php';
@@ -8,6 +8,50 @@
         header('Location: ../index.php');
         exit();
     }
+
+    $user_id = $_SESSION['user_id'];
+
+    $status = 'en attente';
+    $demtotal_stmt = mysqli_prepare($conn, "SELECT COUNT(s.id_seance) AS total
+                                        FROM seance s
+                                        JOIN coach c ON c.id_coach = s.id_coach
+                                        WHERE s.statut = ? AND c.id_user = ?");
+    mysqli_stmt_bind_param($demtotal_stmt, 'si', $status, $user_id);
+    mysqli_stmt_execute($demtotal_stmt);
+
+    $demtotal_result = mysqli_stmt_get_result($demtotal_stmt);
+    
+    if($row = mysqli_fetch_assoc($demtotal_result)) {
+        $result = $row['total'] ?? 0;
+    }
+    mysqli_stmt_close($demtotal_stmt);
+
+    $current_date = date('Y-m-d');
+    $todayDem_stmt = mysqli_prepare($conn, "SELECT COUNT(s.id_seance) AS total
+                                        FROM seance s
+                                        JOIN coach c ON c.id_coach = s.id_coach
+                                        WHERE s.statut = 'accepte' AND date_seance = ? AND  c.id_user = ?");
+    mysqli_stmt_bind_param($todayDem_stmt, 'si', $current_date ,$user_id);
+    mysqli_stmt_execute($todayDem_stmt);
+
+    $todayTotal_result = mysqli_stmt_get_result($todayDem_stmt);
+    
+    if($row = mysqli_fetch_assoc($todayTotal_result)) {
+        $todayResult = $row['total'] ?? 0;
+    }
+    mysqli_stmt_close($todayDem_stmt);
+
+
+    $dem_stmt = mysqli_prepare($conn, "SELECT s.*, u.nom AS client_nom, u.prenom AS client_prenom, d.nom_discipline
+                                        FROM seance s
+                                        JOIN coach c ON s.id_coach = c.id_coach
+                                        JOIN sportif sp ON s.id_sportif = sp.id_sportif
+                                        JOIN Utilisateur u ON sp.id_user = u.id_user
+                                        JOIN disciplines d ON s.id_discipline = d.id_discipline
+                                        WHERE c.id_user = ? AND s.statut = 'en attente'");
+    mysqli_stmt_bind_param($dem_stmt, 'i', $user_id);
+    mysqli_stmt_execute($dem_stmt);
+    $dem_result = mysqli_stmt_get_result($dem_stmt);
 
 ?>
 
@@ -57,7 +101,7 @@
                         </svg>
                     </div>
                     <div>
-                        <h3 class="text-white font-semibold text-lg">5</h3>
+                        <h3 class="text-white font-semibold text-lg"><?= htmlspecialchars($result) ?></h3>
                         <p class="text-slate-400 text-sm">Demandes en attente</p>
                     </div>
                 </div>
@@ -71,7 +115,7 @@
                         </svg>
                     </div>
                     <div>
-                        <h3 class="text-white font-semibold text-lg">3</h3>
+                        <h3 class="text-white font-semibold text-lg"><?= htmlspecialchars($todayResult) ?></h3>
                         <p class="text-slate-400 text-sm">Séances aujourd'hui</p>
                     </div>
                 </div>
@@ -102,71 +146,41 @@
             </div>
 
             <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                <!-- Reservation card 1 -->
-                <div class="bg-slate-900/50 rounded-lg p-6 border border-slate-700/30 hover:border-orange-500/50 transition-all duration-300">
-                    <h3 class="font-bold text-xl mb-4 text-white">Alice Martin</h3>
-                    <div class="space-y-2 mb-6">
-                        <div class="flex items-center gap-2 text-slate-300">
-                            <svg class="w-4 h-4 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
-                            </svg>
-                            <span class="text-sm">Tennis</span>
+                <?php while($row = mysqli_fetch_assoc($dem_result)): ?>
+                    <!-- Reservation card 1 -->
+                    <div class="bg-slate-900/50 rounded-lg p-6 border border-slate-700/30 hover:border-orange-500/50 transition-all duration-300">
+                        <h3 class="font-bold text-xl mb-4 text-white"><?= htmlspecialchars($row['client_nom']) .' '. htmlspecialchars($row['client_prenom']) ?></h3>
+                        <div class="space-y-2 mb-6">
+                            <div class="flex items-center gap-2 text-slate-300">
+                                <svg class="w-4 h-4 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                                </svg>
+                                <span class="text-sm"><?= htmlspecialchars($row['nom_discipline']) ?></span>
+                            </div>
+                            <div class="flex items-center gap-2 text-slate-300">
+                                <svg class="w-4 h-4 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                                </svg>
+                                <span class="text-sm"><?= htmlspecialchars($row['date_seance']) ?></span>
+                            </div>
+                            <div class="flex items-center gap-2 text-slate-300">
+                                <svg class="w-4 h-4 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                </svg>
+                                <span class="text-sm"><?= htmlspecialchars($row['heure']) ?></span>
+                            </div>
                         </div>
-                        <div class="flex items-center gap-2 text-slate-300">
-                            <svg class="w-4 h-4 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-                            </svg>
-                            <span class="text-sm">20 Décembre 2025</span>
-                        </div>
-                        <div class="flex items-center gap-2 text-slate-300">
-                            <svg class="w-4 h-4 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                            </svg>
-                            <span class="text-sm">14:00 - 15:00</span>
-                        </div>
-                    </div>
-                    <div class="flex gap-3">
-                        <button class="flex-1 px-4 py-2 bg-green-500 text-white font-semibold rounded-lg hover:bg-green-600 transition-colors">
-                            Accepter
-                        </button>
-                        <button class="flex-1 px-4 py-2 bg-red-500 text-white font-semibold rounded-lg hover:bg-red-600 transition-colors">
-                            Refuser
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Reservation card 2 -->
-                <div class="bg-slate-900/50 rounded-lg p-6 border border-slate-700/30 hover:border-orange-500/50 transition-all duration-300">
-                    <h3 class="font-bold text-xl mb-4 text-white">Mark Dupont</h3>
-                    <div class="space-y-2 mb-6">
-                        <div class="flex items-center gap-2 text-slate-300">
-                            <svg class="w-4 h-4 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
-                            </svg>
-                            <span class="text-sm">Fitness</span>
-                        </div>
-                        <div class="flex items-center gap-2 text-slate-300">
-                            <svg class="w-4 h-4 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-                            </svg>
-                            <span class="text-sm">22 Décembre 2025</span>
-                        </div>
-                        <div class="flex items-center gap-2 text-slate-300">
-                            <svg class="w-4 h-4 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                            </svg>
-                            <span class="text-sm">09:00 - 10:00</span>
+                        <div class="flex gap-3">
+                            <button class="flex-1 px-4 py-2 bg-green-500 text-white font-semibold rounded-lg hover:bg-green-600 transition-colors">
+                                Accepter
+                            </button>
+                            <button class="flex-1 px-4 py-2 bg-red-500 text-white font-semibold rounded-lg hover:bg-red-600 transition-colors">
+                                Refuser
+                            </button>
                         </div>
                     </div>
-                    <div class="flex gap-3">
-                        <button class="flex-1 px-4 py-2 bg-green-500 text-white font-semibold rounded-lg hover:bg-green-600 transition-colors">
-                            Accepter
-                        </button>
-                        <button class="flex-1 px-4 py-2 bg-red-500 text-white font-semibold rounded-lg hover:bg-red-600 transition-colors">
-                            Refuser
-                        </button>
-                    </div>
-                </div>
+                <?php endwhile; ?>
+                <?php mysqli_stmt_close($dem_stmt); ?>
             </div>
         </div>
     </div>
