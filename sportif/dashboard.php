@@ -7,13 +7,56 @@
         exit();
     }
 
-    $id_user = $_SESSION['user_id'];
+    $user_id = $_SESSION['user_id'];
 
+    // 1- fetch the user first name and last name
     $stmt = mysqli_prepare($conn, 'SELECT nom, prenom FROM Utilisateur WHERE id_user = ?');
-    mysqli_stmt_bind_param($stmt, 'i', $id_user);
+    mysqli_stmt_bind_param($stmt, 'i', $user_id);
     mysqli_stmt_execute($stmt);
     mysqli_stmt_bind_result($stmt, $nom, $prenom);
     mysqli_stmt_fetch($stmt);
+    mysqli_stmt_close($stmt);
+
+    // 2- fetch the number of Séances programmées
+    $pro_stmt = mysqli_prepare($conn, 'SELECT COUNT(s.id_seance) AS total
+                                        FROM seance s
+                                        JOIN sportif sp ON s.id_sportif = sp.id_sportif
+                                        WHERE sp.id_user = ?
+                            ');
+    mysqli_stmt_bind_param($pro_stmt, 'i', $user_id);
+    mysqli_stmt_execute($pro_stmt);
+    $proTotal = mysqli_stmt_get_result($pro_stmt);
+    $totalProgmmes = mysqli_fetch_assoc($proTotal)['total'] ?? 0;
+
+
+    // 3- fetch the Séances complétées
+    $comp_stmt = mysqli_prepare($conn, 'SELECT COUNT(s.id_seance) AS total
+                                        FROM seance s
+                                        JOIN sportif sp ON s.id_sportif = sp.id_sportif
+                                        WHERE sp.id_user = ? AND s.date_seance < CURDATE()
+                            ');
+    mysqli_stmt_bind_param($comp_stmt, 'i', $user_id);
+    mysqli_stmt_execute($comp_stmt);
+    $compTotal = mysqli_stmt_get_result($comp_stmt);
+
+    $totalCompletes = mysqli_fetch_assoc($compTotal)['total'] ?? 0;
+
+    // 4- fetch the cards
+
+    $card_stmt = mysqli_prepare($conn, 'SELECT s.*, u.nom AS coach_nom, u.prenom AS coach_prenom 
+                                        FROM seance s
+                                        JOIN coach c ON s.id_coach = c.id_coach
+                                        JOIN Utilisateur u ON c.id_user = u.id_user
+                                        JOIN sportif sp ON s.id_sportif = sp.id_sportif
+                                        WHERE u.id_user = ?
+                                        ORDER BY s.date_seance ASC
+
+                                ');
+    mysqli_stmt_bind_param($card_stmt, 'i', $user_id);
+    mysqli_stmt_execute($card_stmt);
+    $card_result = mysqli_stmt_get_result($card_stmt);
+
+
 
 ?>
 
@@ -63,7 +106,7 @@
                         </svg>
                     </div>
                     <div>
-                        <h3 class="text-white font-semibold text-xl sm:text-2xl">0</h3>
+                        <h3 class="text-white font-semibold text-xl sm:text-2xl"><?= htmlspecialchars($totalProgmmes) ?></h3>
                         <p class="text-slate-400 text-xs sm:text-sm mt-0.5">Séances programmées</p>
                     </div>
                 </div>
@@ -77,7 +120,7 @@
                         </svg>
                     </div>
                     <div>
-                        <h3 class="text-white font-semibold text-xl sm:text-2xl">0</h3>
+                        <h3 class="text-white font-semibold text-xl sm:text-2xl"><?= htmlspecialchars($totalCompletes) ?></h3>
                         <p class="text-slate-400 text-xs sm:text-sm mt-0.5">Séances complétées</p>
                     </div>
                 </div>
@@ -92,55 +135,56 @@
                 </svg>
                 <h2 class="text-xl sm:text-2xl font-bold text-white">Mes réservations</h2>
             </div>
-
-            <!-- Made reservation card fully responsive with stacked layout on mobile -->
-            <div class="bg-slate-900/60 backdrop-blur-sm border border-slate-700/50 rounded-xl p-4 sm:p-5 hover:border-orange-500/50 transition-all duration-300 hover:shadow-lg hover:shadow-orange-500/10">
-                <div class="flex flex-col lg:flex-row lg:items-center gap-4 lg:gap-6">
-                    <div class="flex items-start gap-3 sm:gap-4 flex-1 min-w-0">
-                        <div class="w-12 h-12 sm:w-14 sm:h-14 bg-gradient-to-br from-orange-500 to-orange-600 rounded-lg flex items-center justify-center flex-shrink-0">
-                            <svg class="w-6 h-6 sm:w-7 sm:h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
-                            </svg>
-                        </div>
-                        <div class="flex-1 min-w-0">
-                            <p class="text-white font-semibold text-base sm:text-lg mb-1">Coach Ahmed</p>
-                            <div class="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
-                                <span class="text-xs sm:text-sm text-slate-400 flex items-center gap-1.5">
-                                    <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-                                    </svg>
-                                    20 Sept 2025
-                                </span>
-                                <span class="text-xs sm:text-sm text-slate-400 flex items-center gap-1.5">
-                                    <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                                    </svg>
-                                    18:00
-                                </span>
+            <?php while($row = mysqli_fetch_assoc($card_result)): ?>
+                <!-- Made reservation card fully responsive with stacked layout on mobile -->
+                <div class="bg-slate-900/60 backdrop-blur-sm border border-slate-700/50 rounded-xl p-4 sm:p-5 hover:border-orange-500/50 transition-all duration-300 hover:shadow-lg hover:shadow-orange-500/10">
+                    <div class="flex flex-col lg:flex-row lg:items-center gap-4 lg:gap-6">
+                        <div class="flex items-start gap-3 sm:gap-4 flex-1 min-w-0">
+                            <div class="w-12 h-12 sm:w-14 sm:h-14 bg-gradient-to-br from-orange-500 to-orange-600 rounded-lg flex items-center justify-center flex-shrink-0">
+                                <svg class="w-6 h-6 sm:w-7 sm:h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                                </svg>
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <p class="text-white font-semibold text-base sm:text-lg mb-1">Coach <?= htmlspecialchars($row['coach_nom']) ?></p>
+                                <div class="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
+                                    <span class="text-xs sm:text-sm text-slate-400 flex items-center gap-1.5">
+                                        <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                                        </svg>
+                                        <?= htmlspecialchars($row['date_seance']) ?>
+                                    </span>
+                                    <span class="text-xs sm:text-sm text-slate-400 flex items-center gap-1.5">
+                                        <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                        </svg>
+                                        <?= htmlspecialchars($row['heure']) ?>
+                                    </span>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                    
-                    <!-- Made action buttons responsive: stacked on mobile, horizontal on desktop -->
-                    <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3 lg:flex-shrink-0">
-                        <span class="px-4 py-2.5 text-xs sm:text-sm font-medium rounded-lg bg-yellow-500/10 text-yellow-400 border border-yellow-500/20 text-center">
-                            En attente
-                        </span>
-                        <a href="modifier_reservation.php" class="px-4 py-2.5 bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 rounded-lg border border-blue-500/20 hover:border-blue-500/40 transition-all duration-200 flex items-center justify-center gap-2 active:scale-95">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
-                            </svg>
-                            <span class="text-xs sm:text-sm font-medium">Modifier</span>
-                        </a>
-                        <button class="px-4 py-2.5 bg-red-500/10 hover:bg-red-500/20 text-red-400 rounded-lg border border-red-500/20 hover:border-red-500/40 transition-all duration-200 flex items-center justify-center gap-2 active:scale-95">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-                            </svg>
-                            <span class="text-xs sm:text-sm font-medium">Annuler</span>
-                        </button>
+                        
+                        <!-- Made action buttons responsive: stacked on mobile, horizontal on desktop -->
+                        <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3 lg:flex-shrink-0">
+                            <span class="px-4 py-2.5 text-xs sm:text-sm font-medium rounded-lg bg-yellow-500/10 text-yellow-400 border border-yellow-500/20 text-center">
+                                En attente
+                            </span>
+                            <a href="modifier_reservation.php" class="px-4 py-2.5 bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 rounded-lg border border-blue-500/20 hover:border-blue-500/40 transition-all duration-200 flex items-center justify-center gap-2 active:scale-95">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                                </svg>
+                                <span class="text-xs sm:text-sm font-medium">Modifier</span>
+                            </a>
+                            <button class="px-4 py-2.5 bg-red-500/10 hover:bg-red-500/20 text-red-400 rounded-lg border border-red-500/20 hover:border-red-500/40 transition-all duration-200 flex items-center justify-center gap-2 active:scale-95">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                                </svg>
+                                <span class="text-xs sm:text-sm font-medium">Annuler</span>
+                            </button>
+                        </div>
                     </div>
                 </div>
-            </div>
+            <?php endwhile; ?>
         </div>
     </div>
 
