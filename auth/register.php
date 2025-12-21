@@ -33,6 +33,7 @@ if (isset($_POST['submit'])) {
     if (empty($errors)) {
 
         // Récupérer id_role
+        $id_role = null;
         $stmt = mysqli_prepare($conn, "SELECT id_role FROM Role WHERE nom_role = ?");
         mysqli_stmt_bind_param($stmt, "s", $role);
         mysqli_stmt_execute($stmt);
@@ -40,31 +41,43 @@ if (isset($_POST['submit'])) {
         mysqli_stmt_fetch($stmt);
         mysqli_stmt_close($stmt);
 
-        $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
+        if(!$id_role) {
+            $errors[] = "Erreur de configuration du rôle.";
+        }else {
+            $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
 
-        // Insert utilisateur
-        $stmt = mysqli_prepare($conn, "
-            INSERT INTO Utilisateur (nom, prenom, email, mot_de_passe, id_role)
-            VALUES (?, ?, ?, ?, ?)
-        ");
-        mysqli_stmt_bind_param($stmt, "ssssi", $nom, $prenom, $email, $hashedPassword, $id_role);
-        mysqli_stmt_execute($stmt);
-        $id_user = mysqli_insert_id($conn);
-        mysqli_stmt_close($stmt);
+            // Insert utilisateur
+            $stmt = mysqli_prepare($conn, "
+                INSERT INTO Utilisateur (nom, prenom, email, mot_de_passe, id_role)
+                VALUES (?, ?, ?, ?, ?)
+            ");
+            mysqli_stmt_bind_param($stmt, "ssssi", $nom, $prenom, $email, $hashedPassword, $id_role);
+            if(mysqli_stmt_execute($stmt)) {
+                $id_user = mysqli_insert_id($conn);
+                mysqli_stmt_close($stmt);
 
-        // Insert profil
-        if ($role === 'sportif') {
-            $stmt = mysqli_prepare($conn, "INSERT INTO sportif (id_user) VALUES (?)");
-        } else {
-            $stmt = mysqli_prepare($conn, "INSERT INTO coach (id_user) VALUES (?)");
+                // Insert profil
+                if ($role === 'sportif') {
+                    $stmt = mysqli_prepare($conn, "INSERT INTO sportif (id_user) VALUES (?)");
+                } elseif ($role === 'coach') {
+                    $stmt = mysqli_prepare($conn, "INSERT INTO coach (id_user) VALUES (?)");
+                }
+
+                mysqli_stmt_bind_param($stmt, "i", $id_user);
+                mysqli_stmt_execute($stmt);
+                mysqli_stmt_close($stmt);
+
+                header("Location: login.php?registred=1");
+                exit;
+            } else {
+                $errors[] = "Erreur lors de l'enregistrement.";
+            }
+           
+            
         }
 
-        mysqli_stmt_bind_param($stmt, "i", $id_user);
-        mysqli_stmt_execute($stmt);
-        mysqli_stmt_close($stmt);
 
-        header("Location: login.php?registred=1");
-        exit;
+        
     }
 }
 
@@ -310,7 +323,9 @@ if (isset($_POST['submit'])) {
     <script>
         const jserrors = <?= json_encode($errors); ?>;
 
-        showErorrs(jserrors);
+        if(jserrors.length > 0) {
+            showErrors(jserrors);
+        }
     </script>
 </body>
 </html>
