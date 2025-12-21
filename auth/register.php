@@ -1,7 +1,8 @@
 <?php
 require_once '../config/conn.php';
 
-$errors = [];
+$errors[] = "Test error message";
+
 
 if (isset($_POST['submit'])) {
 
@@ -191,7 +192,7 @@ if (isset($_POST['submit'])) {
                                 id="nom"
                                 name="nom"
                                 value="<?= isset($_POST['nom']) ? htmlspecialchars($_POST['nom']) : '' ?>"
-                                required
+                                
                                 class="w-full px-4 py-3 border border-gray-300 rounded-lg input-focus transition-all"
                                 placeholder="Dupont"
                             >
@@ -205,7 +206,7 @@ if (isset($_POST['submit'])) {
                                 id="prenom"
                                 name="prenom"
                                 value="<?= isset($_POST['prenom']) ? htmlspecialchars($_POST['prenom']) : '' ?>"
-                                required
+                                
                                 class="w-full px-4 py-3 border border-gray-300 rounded-lg input-focus transition-all"
                                 placeholder="Jean"
                             >
@@ -222,10 +223,11 @@ if (isset($_POST['submit'])) {
                             id="email"
                             name="email"
                             value="<?= isset($_POST['email']) ? htmlspecialchars($_POST['email']) : '' ?>"
-                            required
+                            
                             class="w-full px-4 py-3 border border-gray-300 rounded-lg input-focus transition-all"
                             placeholder="jean.dupont@exemple.fr"
                         >
+                        <p id="emailError" class="text-red-500 text-xs mt-1 hidden">Format d'email invalide.</p>
                     </div>
                     
                     <!-- Password -->
@@ -237,7 +239,7 @@ if (isset($_POST['submit'])) {
                             type="password"
                             id="mot_de_passe"
                             name="mot_de_passe"
-                            required
+                            
                             class="w-full px-4 py-3 border border-gray-300 rounded-lg input-focus transition-all"
                             placeholder="••••••••"
                         >
@@ -258,7 +260,7 @@ if (isset($_POST['submit'])) {
                                     name="role"
                                     value="sportif"
                                     class="peer hidden"
-                                    required
+                                    
                                     <?= (isset($_POST['role']) && $_POST['role'] === 'sportif') ? 'checked' : '' ?>
                                 >
                                 <label
@@ -281,7 +283,7 @@ if (isset($_POST['submit'])) {
                                     name="role"
                                     value="coach"
                                     class="peer hidden"
-                                    required
+                                    
                                     <?= (isset($_POST['role']) && $_POST['role'] === 'coach') ? 'checked' : '' ?>
                                 >
                                 <label
