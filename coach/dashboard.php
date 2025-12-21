@@ -178,12 +178,22 @@
                             </div>
                         </div>
                         <div class="flex gap-3">
-                            <button class="flex-1 px-4 py-2 bg-green-500 text-white font-semibold rounded-lg hover:bg-green-600 transition-colors">
-                                Accepter
-                            </button>
-                            <button class="flex-1 px-4 py-2 bg-red-500 text-white font-semibold rounded-lg hover:bg-red-600 transition-colors">
-                                Refuser
-                            </button>
+                            <form action="traiter_reservation.php" method="POST" class="flex-1">
+                                <input type="hidden" name="id_seance" value="<?= $row['id_seance'] ?>">
+                                <input type="hidden" name="action" value="accepte">
+                                <button type="submit" class="w-full px-4 py-2 bg-green-500 text-white font-semibold rounded-lg hover:bg-green-600 transition-colors">
+                                    Accepter
+                                </button>
+                            </form>
+
+                            <form action="traiter_reservation.php" method="POST" class="flex-1">
+                                <input type="hidden" name="id_seance" value="<?= $row['id_seance'] ?>">
+                                <input type="hidden" name="action" value="refuse">
+                                <button type="submit" class="w-full px-4 py-2 bg-red-500 text-white font-semibold rounded-lg hover:bg-red-600 transition-colors" 
+                                        onclick="return confirm('Voulez-vous vraiment refuser cette demande ?')">
+                                    Refuser
+                                </button>
+                            </form>
                         </div>
                     </div>
                 <?php endwhile; ?>

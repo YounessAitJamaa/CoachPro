@@ -68,7 +68,7 @@
                                                 SELECT s.id_disponibilite 
                                                 FROM seance s
                                                 JOIN sportif sp ON s.id_sportif = sp.id_sportif
-                                                WHERE s.id_seance = ? AND sp.id_user = ?
+                                                WHERE s.id_seance = ? AND sp.id_user = ? AND s.statut = "en attente"
                                             ');
 
             if($find_stmt) {
@@ -116,6 +116,7 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Dashboard Sportif - CoachPro</title>
         <script src="https://cdn.tailwindcss.com"></script>
+        <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     </head>
     <body class="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 min-h-screen">
 
@@ -225,21 +226,26 @@
                                 
                                 <!-- Made action buttons responsive: stacked on mobile, horizontal on desktop -->
                                 <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3 lg:flex-shrink-0">
+                                    
                                     <span class="px-4 py-2.5 text-xs sm:text-sm font-medium rounded-lg 
-                                        <?= $row['statut'] === 'Confirmer' ? 'bg-green-500/10 text-green-400 border-green-500/20' : 'bg-yellow-500/10 text-yellow-400 border-yellow-500/20' ?> 
+                                        <?= $row['statut'] === 'accepte' ? 'bg-green-500/10 text-green-400 border-green-500/20' : 'bg-yellow-500/10 text-yellow-400 border-yellow-500/20' ?> 
                                         text-center">
-                                        <?= htmlspecialchars($row['statut']) ?>
+                                        <?= htmlspecialchars(ucfirst($row['statut'])) ?>
                                     </span>
 
-                                    <form method="POST" onsubmit="return confirm('Êtes-vous sûr de vouloir annuler cette séance ?');">
-                                        <input type="hidden" name="seance_id" value="<?= $row['id_seance'] ?>">
-                                        <button type="submit" name="cancel_seance" class="w-full px-4 py-2.5 bg-red-500/10 hover:bg-red-500/20 text-red-400 rounded-lg border border-red-500/20 hover:border-red-500/40 transition-all duration-200 flex items-center justify-center gap-2 active:scale-95">
-                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-                                            </svg>
-                                            <span class="text-xs sm:text-sm font-medium">Annuler</span>
-                                        </button>
-                                    </form>
+                                    <?php if($row['statut'] === 'en attente'): ?>
+                                        <form method="POST" class="cancel-seance-form">
+                                            <input type="hidden" name="seance_id" value="<?= $row['id_seance'] ?>">
+                                            <button type="submit" name="cancel_seance" class="w-full px-4 py-2.5 bg-red-500/10 hover:bg-red-500/20 text-red-400 rounded-lg border border-red-500/20 hover:border-red-500/40 transition-all duration-200 flex items-center justify-center gap-2 active:scale-95">
+                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                                                </svg>
+                                                <span class="text-xs sm:text-sm font-medium">Annuler</span>
+                                            </button>
+                                        </form>
+                                    <?php else: ?>
+                                        <span class="text-slate-500 text-xs italic px-2">Confirmation verrouillée</span>
+                                    <?php endif; ?>
                                 </div>
                             </div>
                         </div>

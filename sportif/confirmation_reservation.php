@@ -59,7 +59,7 @@
             $statut, 
             $id_sportif, 
             $dispo['id_coach'], 
-            $id_discipline, 
+            $id_discipline,
             $disp_id
         );
         mysqli_stmt_execute($insert_stmt);
